@@ -1,0 +1,116 @@
+---
+kind: pipeline
+type: docker
+name: build-arm
+
+platform:
+  os: linux
+  arch: arm
+
+workspace:
+  base: /go
+  path: src/git.nemunai.re/nemunaire/hathoris
+
+steps:
+- name: build front
+  image: node:20-alpine
+  commands:
+    - mkdir deploy
+    - cd ui
+    - npm install --network-timeout=100000
+    - npm run build
+    - tar chjf ../deploy/static.tar.bz2 build
+
+- name: build
+  image: golang:1-alpine
+  commands:
+    - apk --no-cache add alsa-lib-dev build-base git pkgconf
+    - go get -v -d
+    - go vet -v
+    - go build -v -ldflags '-w -X main.Version=${DRONE_BRANCH}-${DRONE_COMMIT} -X main.build=${DRONE_BUILD_NUMBER}' -o deploy/hathoris-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}
+    - ln deploy/hathoris-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH} hathoris
+  when:
+    event:
+      exclude:
+        - tag
+
+- name: build armv7 tag
+  image: golang:1-alpine
+  commands:
+    - apk --no-cache add alsa-lib-dev build-base git pkgconf
+    - go get -v -d
+    - go vet -v
+    - go build -v -ldflags '-w -X main.Version=${DRONE_TAG##v} -X main.build=${DRONE_BUILD_NUMBER}' -o deploy/hathoris-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}v7
+    - ln deploy/hathoris-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}v7 hathoris
+  when:
+    event:
+        - tag
+
+- name: build armv6 tag
+  image: golang:1-alpine
+  commands:
+    - apk --no-cache add alsa-lib-dev build-base git pkgconf
+    - go build -v -tags netgo -ldflags '-w -X main.Version=${DRONE_TAG##v} -X main.build=${DRONE_BUILD_NUMBER}' -o deploy/hathoris-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}hf
+  environment:
+    CGO_ENABLED: 0
+    GOARM: 6
+  when:
+    event:
+        - tag
+
+- name: gitea release
+  image: plugins/gitea-release:linux-arm
+  settings:
+    api_key:
+      from_secret: gitea_api_key
+    base_url: https://git.nemunai.re/
+    files:
+      - deploy/hathoris-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}hf
+      - deploy/hathoris-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}v7
+  when:
+    event:
+        - tag
+
+- name: docker
+  image: plugins/docker:linux-arm
+  settings:
+    registry: registry.nemunai.re
+    repo: registry.nemunai.re/hathoris
+    auto_tag: true
+    auto_tag_suffix: ${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}
+    dockerfile: Dockerfile-norebuild
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+
+trigger:
+  event:
+  - cron
+  - push
+  - tag
+
+---
+kind: pipeline
+name: docker-manifest
+
+steps:
+- name: publish on Docker Hub
+  image: plugins/manifest
+  settings:
+    auto_tag: true
+    ignore_missing: true
+    spec: .drone-manifest.yml
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+
+trigger:
+  event:
+  - cron
+  - push
+  - tag
+
+depends_on:
+- build-arm
