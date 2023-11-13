@@ -2,16 +2,19 @@ package amp1gpio
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"path"
 
 	"git.nemunai.re/nemunaire/hathoris/sources"
 )
 
 type AMP1GPIOSource struct {
-	Path string
+	process *exec.Cmd
+	Path    string
 }
 
 const GPIODirectory = "/sys/class/gpio/gpio46/"
@@ -39,7 +42,7 @@ func (s *AMP1GPIOSource) read() ([]byte, error) {
 }
 
 func (s *AMP1GPIOSource) IsActive() bool {
-	return s.IsEnabled()
+	return s.process != nil
 }
 
 func (s *AMP1GPIOSource) IsEnabled() bool {
@@ -49,7 +52,7 @@ func (s *AMP1GPIOSource) IsEnabled() bool {
 		return false
 	}
 
-	return bytes.Compare(b, []byte{'1'}) == 0
+	return bytes.Compare(b, []byte{'1', '\n'}) == 0
 }
 
 func (s *AMP1GPIOSource) write(value string) error {
@@ -65,9 +68,33 @@ func (s *AMP1GPIOSource) write(value string) error {
 }
 
 func (s *AMP1GPIOSource) Enable() error {
+	if s.process != nil {
+		return fmt.Errorf("Already running")
+	}
+
+	s.process = exec.Command("aplay", "-f", "cd", "/dev/zero")
+	if err := s.process.Start(); err != nil {
+		return err
+	}
+
+	go func() {
+		err := s.process.Wait()
+		if err != nil {
+			s.process.Process.Kill()
+		}
+
+		s.process = nil
+	}()
+
 	return s.write("1")
 }
 
 func (s *AMP1GPIOSource) Disable() error {
+	if s.process != nil {
+		if s.process.Process != nil {
+			s.process.Process.Kill()
+		}
+	}
+
 	return s.write("0")
 }

@@ -21,9 +21,12 @@ func declareSourcesRoutes(cfg *config.Config, router *gin.RouterGroup) {
 		ret := map[string]*SourceState{}
 
 		for k, src := range sources.SoundSources {
+			active := src.IsActive()
+
 			ret[k] = &SourceState{
 				Name:    src.GetName(),
 				Enabled: src.IsEnabled(),
+				Active:  &active,
 			}
 		}
 
@@ -46,6 +49,22 @@ func declareSourcesRoutes(cfg *config.Config, router *gin.RouterGroup) {
 	})
 	sourcesRoutes.GET("/settings", func(c *gin.Context) {
 		c.JSON(http.StatusOK, c.MustGet("source"))
+	})
+	sourcesRoutes.GET("/currently", func(c *gin.Context) {
+		src := c.MustGet("source").(sources.SoundSource)
+
+		if !src.IsActive() {
+			c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"errmsg": "Source not active"})
+			return
+		}
+
+		s, ok := src.(sources.PlayingSource)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"errmsg": "The source doesn't support"})
+			return
+		}
+
+		c.JSON(http.StatusOK, s.CurrentlyPlaying())
 	})
 	sourcesRoutes.POST("/enable", func(c *gin.Context) {
 		src := c.MustGet("source").(sources.SoundSource)

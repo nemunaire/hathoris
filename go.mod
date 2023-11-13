@@ -2,7 +2,10 @@ module git.nemunai.re/nemunaire/hathoris
 
 go 1.21
 
-require github.com/gin-gonic/gin v1.9.1
+require (
+	github.com/DexterLB/mpvipc v0.0.0-20230829142118-145d6eabdc37
+	github.com/gin-gonic/gin v1.9.1
+)
 
 require (
 	github.com/bytedance/sonic v1.9.1 // indirect
@@ -28,5 +31,6 @@ require (
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
+	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
