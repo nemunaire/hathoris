@@ -2,7 +2,9 @@ package api
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"os/exec"
 	"strconv"
@@ -13,6 +15,12 @@ import (
 	"git.nemunai.re/nemunaire/hathoris/config"
 )
 
+var cardId string = "0"
+
+func init() {
+	flag.StringVar(&cardId, "card-id", cardId, "ALSA card identifier for volume handling")
+}
+
 func declareVolumeRoutes(cfg *config.Config, router *gin.RouterGroup) {
 	router.GET("/mixer", func(c *gin.Context) {
 		cnt, err := parseAmixerContent()
@@ -21,7 +29,13 @@ func declareVolumeRoutes(cfg *config.Config, router *gin.RouterGroup) {
 			return
 		}
 
-		c.JSON(http.StatusOK, cnt)
+		var ret []*CardControlState
+
+		for _, cc := range cnt {
+			ret = append(ret, cc.ToCardControlState())
+		}
+
+		c.JSON(http.StatusOK, ret)
 	})
 
 	mixerRoutes := router.Group("/mixer/:mixer")
@@ -45,10 +59,12 @@ func declareVolumeRoutes(cfg *config.Config, router *gin.RouterGroup) {
 
 		var values []string
 		for _, v := range valuesINT {
-			if t, ok := v.(int64); ok {
-				values = append(values, strconv.FormatInt(t, 10))
-			} else if t, ok := v.(float64); ok {
-				values = append(values, fmt.Sprintf("%f", t))
+			if t, ok := v.(float64); ok {
+				if float64(int64(t)) == t {
+					values = append(values, strconv.FormatInt(int64(t), 10))
+				} else {
+					values = append(values, fmt.Sprintf("%f", t))
+				}
 			} else if t, ok := v.(bool); ok {
 				if t {
 					values = append(values, "on")
@@ -110,7 +126,7 @@ func (cc *CardControl) parseAmixerField(key, value string) (err error) {
 	case "iface":
 		cc.Interface = value
 	case "name":
-		cc.Name = value
+		cc.Name = strings.TrimPrefix(strings.TrimSuffix(value, "'"), "'")
 	case "type":
 		cc.Type = value
 	case "access":
@@ -133,12 +149,17 @@ func (cc *CardControl) ToCardControlState() *CardControlState {
 		NumID: cc.NumID,
 		Type:  cc.Type,
 		Name:  cc.Name,
+		RW:    strings.HasPrefix(cc.Access, "rw"),
 		Items: cc.Items,
+	}
+
+	if cc.DBScale.Min != 0 || cc.DBScale.Step != 0 {
+		ccs.DBScale = &cc.DBScale
 	}
 
 	// Convert values
 	for _, v := range cc.Values {
-		if cc.Type == "INTEGER" {
+		if cc.Type == "INTEGER" || cc.Type == "ENUMERATED" {
 			if tmp, err := strconv.ParseFloat(v, 10); err == nil {
 				ccs.Current = append(ccs.Current, tmp)
 			}
@@ -151,25 +172,8 @@ func (cc *CardControl) ToCardControlState() *CardControlState {
 		}
 	}
 
-	if cc.DBScale.Min != 0 {
-		ccs.Min = cc.DBScale.Min
-		ccs.Unit = "dB"
-	} else if cc.Min != 0 {
-		ccs.Min = float64(cc.Min)
-	}
-
-	if cc.DBScale.Step != 0 {
-		ccs.Step = cc.DBScale.Step
-		ccs.Unit = "dB"
-	} else if cc.Step != 0 {
-		ccs.Step = float64(cc.Step)
-	} else {
-		ccs.Step = 1.0
-	}
-
-	if cc.Max != 0 {
-		ccs.Max = ccs.Min + ccs.Step*float64(cc.Max-cc.Min)
-	}
+	ccs.Min = cc.Min
+	ccs.Max = cc.Max
 
 	return ccs
 }
@@ -177,7 +181,7 @@ func (cc *CardControl) ToCardControlState() *CardControlState {
 type CardControldBScale struct {
 	Min  float64
 	Step float64
-	Mute int64
+	Mute int64 `json:",omitempty"`
 }
 
 func (cc *CardControldBScale) parseAmixerField(key, value string) (err error) {
@@ -197,16 +201,16 @@ type CardControlState struct {
 	NumID   int64
 	Name    string
 	Type    string
-	Min     float64
-	Max     float64
-	Step    float64
-	Unit    string        `json:"unit,omitempty"`
-	Current []interface{} `json:"values,omitempty"`
-	Items   []string      `json:"items,omitempty"`
+	RW      bool `json:"RW,omitempty"`
+	Min     int64
+	Max     int64
+	DBScale *CardControldBScale `json:",omitempty"`
+	Current []interface{}       `json:"values,omitempty"`
+	Items   []string            `json:"items,omitempty"`
 }
 
 func parseAmixerContent() ([]*CardControl, error) {
-	cmd := exec.Command("amixer", "-c1", "contents")
+	cmd := exec.Command("amixer", "-c", cardId, "-M", "contents")
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -274,11 +278,14 @@ func parseAmixerContent() ([]*CardControl, error) {
 
 func (cc *CardControl) CsetAmixer(values ...string) error {
 	opts := []string{
-		"-c1",
+		"-c",
+		cardId,
+		"-M",
 		"cset",
 		fmt.Sprintf("numid=%d", cc.NumID),
 	}
-	opts = append(opts, values...)
+	opts = append(opts, strings.Join(values, ","))
+	log.Println(opts)
 	cmd := exec.Command("amixer", opts...)
 
 	if err := cmd.Start(); err != nil {

@@ -11,3 +11,7 @@ type SoundSource interface {
 	Enable() error
 	Disable() error
 }
+
+type PlayingSource interface {
+	CurrentlyPlaying() string
+}
