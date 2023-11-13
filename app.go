@@ -38,7 +38,6 @@ func NewApp(cfg *config.Config) *App {
 
 	// Register routes
 	ui.DeclareRoutes(router, cfg)
-	ui.DeclareNoJSRoutes(router, cfg)
 	api.DeclareRoutes(router, cfg)
 
 	router.GET("/api/version", func(c *gin.Context) {

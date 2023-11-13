@@ -57,14 +57,18 @@ func declareInputsRoutes(cfg *config.Config, router *gin.RouterGroup) {
 
 		c.JSON(http.StatusOK, src.CurrentlyPlaying())
 	})
-	inputsRoutes.POST("/pause", func(c *gin.Context) {
+
+	streamRoutes := inputsRoutes.Group("/stream/:stream")
+	streamRoutes.Use(StreamHandler)
+
+	streamRoutes.POST("/pause", func(c *gin.Context) {
 		input, ok := c.MustGet("input").(inputs.ControlableInput)
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"errmsg": "The source doesn't support that"})
 			return
 		}
 
-		err := input.TogglePause()
+		err := input.TogglePause(c.MustGet("streamid").(string))
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"errmsg": fmt.Sprintf("Unable to pause the input: %s", err.Error())})
 			return
@@ -82,6 +86,23 @@ func InputHandler(c *gin.Context) {
 	}
 
 	c.Set("input", src)
+
+	c.Next()
+}
+
+func StreamHandler(c *gin.Context) {
+	input := c.MustGet("input").(inputs.SoundInput)
+
+	streams := input.CurrentlyPlaying()
+
+	stream, ok := streams[c.Param("stream")]
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"errmsg": fmt.Sprintf("Stream not found: %s", c.Param("stream"))})
+		return
+	}
+
+	c.Set("streamid", c.Param("stream"))
+	c.Set("stream", stream)
 
 	c.Next()
 }
