@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"git.nemunai.re/nemunaire/hathoris/config"
+	_ "git.nemunai.re/nemunaire/hathoris/inputs/mpris"
 	_ "git.nemunai.re/nemunaire/hathoris/sources/amp1_gpio"
 	_ "git.nemunai.re/nemunaire/hathoris/sources/mpv"
 	_ "git.nemunai.re/nemunaire/hathoris/sources/spdif"

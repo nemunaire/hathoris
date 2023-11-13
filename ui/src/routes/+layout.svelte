@@ -6,6 +6,10 @@
  sources.refresh();
  setInterval(sources.refresh, 5000);
 
+ import { inputs } from '$lib/stores/inputs';
+ inputs.refresh();
+ setInterval(inputs.refresh, 4500);
+
  const version = fetch('api/version', {headers: {'Accept': 'application/json'}}).then((res) => res.json())
 </script>
 

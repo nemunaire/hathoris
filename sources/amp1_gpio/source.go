@@ -28,7 +28,7 @@ func init() {
 }
 
 func (s *AMP1GPIOSource) GetName() string {
-	return "entrée analogique"
+	return "analog."
 }
 
 func (s *AMP1GPIOSource) read() ([]byte, error) {

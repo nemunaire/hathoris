@@ -98,20 +98,60 @@ func (s *MPVSource) Enable() (err error) {
 			_, err = conn.Get("media-title")
 		}
 
-		conn.Set("ao-volume", 50)
+		conn.Set("ao-volume", 1)
 
 		err = conn.Set("pause", false)
 		if err != nil {
 			return err
 		}
+
+		var pfc interface{}
+		pfc, err = conn.Get("paused-for-cache")
+		for err == nil && !pfc.(bool) {
+			time.Sleep(250 * time.Millisecond)
+			pfc, err = conn.Get("paused-for-cache")
+		}
+		err = nil
+
+		s.FadeIn(conn, 3, 50)
 	}
 
 	return
 }
 
+func (s *MPVSource) FadeIn(conn *mpvipc.Connection, speed int, level int) {
+	volume, err := conn.Get("ao-volume")
+	if err != nil {
+		volume = 1.0
+	}
+
+	for i := int(volume.(float64)) + 1; i <= level; i += speed {
+		conn.Set("ao-volume", i)
+		time.Sleep(time.Duration(300/speed) * time.Millisecond)
+	}
+}
+
+func (s *MPVSource) FadeOut(conn *mpvipc.Connection, speed int) {
+	volume, err := conn.Get("ao-volume")
+	if err == nil {
+		for i := int(volume.(float64)) - 1; i > 0; i -= speed {
+			if conn.Set("ao-volume", i) == nil {
+				time.Sleep(time.Duration(300/speed) * time.Millisecond)
+			}
+		}
+	}
+}
+
 func (s *MPVSource) Disable() error {
 	if s.process != nil {
 		if s.process.Process != nil {
+			conn := mpvipc.NewConnection(s.ipcSocket)
+			err := conn.Open()
+			if err == nil {
+				s.FadeOut(conn, 3)
+				conn.Close()
+			}
+
 			s.process.Process.Kill()
 		}
 	}
@@ -138,4 +178,37 @@ func (s *MPVSource) CurrentlyPlaying() string {
 	}
 
 	return "-"
+}
+
+func (s *MPVSource) TogglePause() error {
+	if s.ipcSocket == "" {
+		return fmt.Errorf("Not supported")
+	}
+
+	conn := mpvipc.NewConnection(s.ipcSocket)
+	err := conn.Open()
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	paused, err := conn.Get("pause")
+	if err != nil {
+		return err
+	}
+
+	if !paused.(bool) {
+		s.FadeOut(conn, 5)
+	}
+
+	err = conn.Set("pause", !paused.(bool))
+	if err != nil {
+		return err
+	}
+
+	if paused.(bool) {
+		s.FadeIn(conn, 5, 50)
+	}
+
+	return nil
 }
