@@ -1,7 +1,9 @@
 <script>
+ import Inputs from '$lib/components/Inputs.svelte';
  import Mixer from '$lib/components/Mixer.svelte';
  import SourceSelection from '$lib/components/SourceSelection.svelte';
  import { activeSources } from '$lib/stores/sources';
+ import { activeInputs } from '$lib/stores/inputs';
 
  let mixerAdvanced = false;
 </script>
@@ -11,7 +13,7 @@
 </div>
 
 <div class="container">
-    {#if $activeSources.length === 0}
+    {#if $activeSources.length === 0 && $activeInputs.length === 0}
         <div class="text-muted text-center mt-1 mb-1">
             Aucune source active pour l'instant.
         </div>
@@ -21,15 +23,31 @@
                 <div class="d-inline-block me-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <strong>{source.name}&nbsp;:</strong>
                             {#await source.currently()}
                                 <div class="spinner-border spinner-border-sm" role="status">
                                     <span class="visually-hidden">Loading...</span>
-                                </div>
+                                </div> <span class="text-muted">@ {source.name}</span>
                             {:then title}
-                                {title}
+                                <strong>{title}</strong> <span class="text-muted">@ {source.name}</span>
                             {:catch error}
-                                activée
+                                {source.name} activée
+                            {/await}
+                        </div>
+                    </div>
+                </div>
+            {/each}
+            {#each $activeInputs as input}
+                <div class="d-inline-block me-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            {#await input.currently()}
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div> <span class="text-muted">@ {input.name}</span>
+                            {:then title}
+                                <strong>{title}</strong> <span class="text-muted">@ {input.name}</span>
+                            {:catch error}
+                                {input.name} activée
                             {/await}
                         </div>
                     </div>
@@ -39,7 +57,7 @@
     {/if}
 
     <div class="row">
-        <div class="col">
+        <div class="col-md">
             <div class="card my-2">
                 <h4 class="card-header">
                     <div class="d-flex justify-content-between">
@@ -61,14 +79,13 @@
             </div>
         </div>
 
-        <div class="col">
+        <div class="col-md">
             <div class="card my-2">
                 <h4 class="card-header">
                     <i class="bi bi-speaker"></i>
                     Sources
                 </h4>
-                <div class="card-body">
-                </div>
+                <Inputs />
             </div>
         </div>
     </div>

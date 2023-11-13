@@ -9,6 +9,7 @@ import (
 func DeclareRoutes(router *gin.Engine, cfg *config.Config) {
 	apiRoutes := router.Group("/api")
 
+	declareInputsRoutes(cfg, apiRoutes)
 	declareSourcesRoutes(cfg, apiRoutes)
 	declareVolumeRoutes(cfg, apiRoutes)
 }

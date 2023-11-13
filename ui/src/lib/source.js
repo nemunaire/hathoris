@@ -6,10 +6,11 @@ export class Source {
     }
   }
 
-  update({ name, enabled, active }) {
+  update({ name, enabled, active, controlable }) {
     this.name = name;
     this.enabled = enabled;
     this.active = active;
+    this.controlable = controlable;
   }
 
   async activate() {
@@ -25,6 +26,13 @@ export class Source {
     if (data.status == 200) {
       return await data.json();
     } else {
+      throw new Error((await res.json()).errmsg);
+    }
+  }
+
+  async playpause() {
+    const data = await fetch(`api/sources/${this.id}/pause`, {headers: {'Accept': 'application/json'}, method: 'POST'});
+    if (data.status != 200) {
       throw new Error((await res.json()).errmsg);
     }
   }

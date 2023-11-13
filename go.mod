@@ -5,6 +5,8 @@ go 1.21
 require (
 	github.com/DexterLB/mpvipc v0.0.0-20230829142118-145d6eabdc37
 	github.com/gin-gonic/gin v1.9.1
+	github.com/godbus/dbus/v5 v5.0.6
+	github.com/leberKleber/go-mpris v1.1.0
 )
 
 require (
