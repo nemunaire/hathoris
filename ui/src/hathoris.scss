@@ -1,0 +1,75 @@
+// Your variable overrides can go here, e.g.:
+// $h1-font-size: 3rem;
+//$primary: #ff485a;
+//$secondary: #ff7b88;
+
+$blue:    #2a9fd6;
+$indigo:  #6610f2;
+$purple:  #6f42c1;
+$pink:    #e83e8c;
+$red:     #c00;
+$orange:  #fd7e14;
+$yellow:  #f80;
+$green:   #77b300;
+$teal:    #20c997;
+$cyan:    #93c;
+
+$primary:       $purple;
+$success:       $green;
+$info:          $cyan;
+$warning:       $yellow;
+$danger:        $red;
+
+$min-contrast-ratio:   2.25;
+
+$enable-shadows: true;
+$enable-gradients: true;
+$enable-responsive-font-sizes: true;
+
+$link-color: $primary;
+
+$navbar-padding-y: 0;
+$nav-link-padding-y: 0.2rem;
+
+@import "bootstrap/scss/bootstrap";
+
+a.btn, button.btn {
+    text-decoration: none !important;
+}
+
+.fixed-bottom .nav-item a {
+    border-top: 1px solid $pink;
+}
+.fixed-bottom .nav-item a.active {
+    background: white;
+    color: $pink;
+}
+
+.marquee {
+    height: 1.5em;
+    overflow: hidden;
+    position: relative;
+}
+.marquee p {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    text-align: center;
+    transform: translateX(100%);
+    animation: scroll-left 10s linear infinite;
+}
+@include media-breakpoint-up(md) {
+    .marquee p {
+        animation: scroll-left 25s linear infinite;
+    }
+}
+@include media-breakpoint-up(xl) {
+    .marquee p {
+        animation: scroll-left 45s linear infinite;
+    }
+}
+@keyframes scroll-left {
+    0%   { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
