@@ -180,7 +180,7 @@ func (s *MPVSource) CurrentlyPlaying() string {
 	return "-"
 }
 
-func (s *MPVSource) TogglePause() error {
+func (s *MPVSource) TogglePause(id string) error {
 	if s.ipcSocket == "" {
 		return fmt.Errorf("Not supported")
 	}

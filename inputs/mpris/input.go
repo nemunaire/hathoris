@@ -103,7 +103,7 @@ func (i *MPRISInput) IsActive() bool {
 	return err == nil
 }
 
-func (i *MPRISInput) CurrentlyPlaying() *string {
+func (i *MPRISInput) CurrentlyPlaying() map[string]string {
 	p, err := i.getPlayer()
 	if err != nil || p == nil {
 		log.Println(err)
@@ -129,10 +129,12 @@ func (i *MPRISInput) CurrentlyPlaying() *string {
 	}
 
 	ret := strings.Join(infos, " - ")
-	return &ret
+	return map[string]string{
+		"default": ret,
+	}
 }
 
-func (i *MPRISInput) TogglePause() error {
+func (i *MPRISInput) TogglePause(id string) error {
 	p, err := i.getPlayer()
 	if err != nil {
 		return err

@@ -7,9 +7,9 @@ var SoundInputs = map[string]SoundInput{}
 type SoundInput interface {
 	GetName() string
 	IsActive() bool
-	CurrentlyPlaying() *string
+	CurrentlyPlaying() map[string]string
 }
 
 type ControlableInput interface {
-	TogglePause() error
+	TogglePause(string) error
 }

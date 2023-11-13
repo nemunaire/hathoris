@@ -122,7 +122,7 @@ func declareSourcesRoutes(cfg *config.Config, router *gin.RouterGroup) {
 			return
 		}
 
-		c.JSON(http.StatusOK, s.TogglePause())
+		c.JSON(http.StatusOK, s.TogglePause("default"))
 	})
 }
 
