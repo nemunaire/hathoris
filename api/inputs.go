@@ -47,7 +47,7 @@ func declareInputsRoutes(cfg *config.Config, router *gin.RouterGroup) {
 	inputsRoutes.GET("/settings", func(c *gin.Context) {
 		c.JSON(http.StatusOK, c.MustGet("input"))
 	})
-	inputsRoutes.GET("/currently", func(c *gin.Context) {
+	inputsRoutes.GET("/streams", func(c *gin.Context) {
 		src := c.MustGet("input").(inputs.SoundInput)
 
 		if !src.IsActive() {
@@ -58,7 +58,7 @@ func declareInputsRoutes(cfg *config.Config, router *gin.RouterGroup) {
 		c.JSON(http.StatusOK, src.CurrentlyPlaying())
 	})
 
-	streamRoutes := inputsRoutes.Group("/stream/:stream")
+	streamRoutes := inputsRoutes.Group("/streams/:stream")
 	streamRoutes.Use(StreamHandler)
 
 	streamRoutes.POST("/pause", func(c *gin.Context) {

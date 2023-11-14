@@ -40,12 +40,16 @@
                 <div class="d-inline-block me-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            {#await input.currently()}
+                            {#await input.streams()}
                                 <div class="spinner-border spinner-border-sm" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div> <span class="text-muted">@ {input.name}</span>
-                            {:then title}
-                                <strong>{title}</strong> <span class="text-muted">@ {input.name}</span>
+                            {:then streams}
+                                {#each Object.keys(streams) as idstream}
+                                    {@const title = streams[idstream]}
+                                    <strong>{title}</strong>
+                                {/each}
+                                <span class="text-muted">@ {input.name}</span>
                             {:catch error}
                                 {input.name} activée
                             {/await}
