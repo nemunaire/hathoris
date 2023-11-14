@@ -12,8 +12,8 @@ export class Input {
     this.controlable = controlable;
   }
 
-  async currently() {
-    const data = await fetch(`api/inputs/${this.id}/currently`, {headers: {'Accept': 'application/json'}});
+  async streams() {
+    const data = await fetch(`api/inputs/${this.id}/streams`, {headers: {'Accept': 'application/json'}});
     if (data.status == 200) {
       return await data.json();
     } else {
@@ -21,8 +21,8 @@ export class Input {
     }
   }
 
-  async playpause() {
-    const data = await fetch(`api/inputs/${this.id}/pause`, {headers: {'Accept': 'application/json'}, method: 'POST'});
+  async playpause(idstream) {
+    const data = await fetch(`api/inputs/${this.id}/streams/${idstream}/pause`, {headers: {'Accept': 'application/json'}, method: 'POST'});
     if (data.status != 200) {
       throw new Error((await res.json()).errmsg);
     }
