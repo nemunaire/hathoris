@@ -11,6 +11,9 @@
          altering_mixer = null;
      }, 450);
  }
+ async function muteMixer(input, streamid, mute) {
+     fetch(`api/inputs/${input.name}/streams/${streamid}/volume`, {headers: {'Accept': 'application/json'}, method: 'POST', body: JSON.stringify({'mute': mute !== undefined ? mute : input.mixer[streamid].mute})}).then(() => inputs.refresh());
+ }
 </script>
 
 <ul class="list-group list-group-flush">
@@ -31,23 +34,33 @@
                             <label for={'input' + iid + 'stream' + idstream} class="form-label d-inline">{title}</label>
                             <span class="text-muted">({input.name})</span>
                         </div>
-                        {#if input.controlable}
-                            <div>
+                        <div class="d-flex align-items-center">
+                            {#if input.mixable && input.mixer[idstream]}
                                 <button
-                                    class="btn btn-sm btn-primary"
+                                    class="btn btn-sm ms-1"
+                                    class:btn-primary={input.mixer[idstream].mute}
+                                    class:btn-secondary={!input.mixer[idstream].mute}
+                                    on:click={() => {muteMixer(input, idstream, !input.mixer[idstream].mute);}}
+                                >
+                                    <i class="bi bi-volume-mute-fill"></i>
+                                </button>
+                            {/if}
+                            {#if input.controlable}
+                                <button
+                                    class="btn btn-sm btn-primary ms-1"
                                     on:click={() => input.playpause(idstream)}
                                 >
                                     <i class="bi bi-pause"></i>
                                 </button>
-                            </div>
-                        {:else if input.mixable && input.mixer[idstream]}
-                            <div
-                                class="badge bg-primary"
-                                title={input.mixer[idstream].volume_percent}
-                            >
-                                {input.mixer[idstream].volume_db}
-                            </div>
-                        {/if}
+                            {:else if input.mixable && input.mixer[idstream]}
+                                <div
+                                    class="badge bg-primary ms-1"
+                                    title={input.mixer[idstream].volume_percent}
+                                >
+                                    {input.mixer[idstream].volume_db}
+                                </div>
+                            {/if}
+                        </div>
                     </div>
                     {#if input.mixable && input.mixer[idstream]}
                         <div>
