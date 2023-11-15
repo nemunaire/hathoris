@@ -82,16 +82,24 @@ func (s *PulseaudioInput) IsActive() bool {
 	return false
 }
 
-func (s *PulseaudioInput) CurrentlyPlaying() map[string]string {
+func (s *PulseaudioInput) getPASinkInputs() ([]PASinkInput, error) {
 	cmd := exec.Command("pactl", "-f", "json", "list", "sink-inputs")
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Println("Unable to list sink-inputs:", err.Error())
-		return nil
+		return nil, fmt.Errorf("unable to list sink-inputs: %w", err)
 	}
 
 	var sinkinputs []PASinkInput
 	err = json.Unmarshal(stdoutStderr, &sinkinputs)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse sink-inputs list: %w", err)
+	}
+
+	return sinkinputs, nil
+}
+
+func (s *PulseaudioInput) CurrentlyPlaying() map[string]string {
+	sinkinputs, err := s.getPASinkInputs()
 	if err != nil {
 		log.Println("Unable to list sink-inputs:", err.Error())
 		return nil
@@ -109,4 +117,60 @@ func (s *PulseaudioInput) CurrentlyPlaying() map[string]string {
 	}
 
 	return ret
+}
+
+func (s *PulseaudioInput) GetMixers() (map[string]*inputs.InputMixer, error) {
+	sinkinputs, err := s.getPASinkInputs()
+	if err != nil {
+		return nil, err
+	}
+
+	ret := map[string]*inputs.InputMixer{}
+	for _, input := range sinkinputs {
+		var maxvolume string
+		for k, vol := range input.Volume {
+			if maxvolume == "" || vol.Value > input.Volume[maxvolume].Value {
+				maxvolume = k
+			}
+		}
+
+		ret[strconv.FormatInt(input.Index, 10)] = &inputs.InputMixer{
+			Volume:        input.Volume[maxvolume].Value,
+			VolumePercent: input.Volume[maxvolume].ValuePercent,
+			VolumeDB:      input.Volume[maxvolume].DB,
+			Balance:       input.Balance,
+			Mute:          input.Mute,
+		}
+	}
+
+	return ret, nil
+}
+
+func (s *PulseaudioInput) SetMixer(stream string, volume *inputs.InputMixer) error {
+	sinkinputs, err := s.getPASinkInputs()
+	if err != nil {
+		return err
+	}
+
+	for _, input := range sinkinputs {
+		if strconv.FormatInt(input.Index, 10) == stream {
+			cmd := exec.Command("pactl", "set-sink-input-volume", stream, strconv.FormatUint(uint64(volume.Volume), 10))
+			err := cmd.Run()
+			if err != nil {
+				return fmt.Errorf("unable to set volume: %w", err)
+			}
+
+			if input.Mute != volume.Mute {
+				cmd := exec.Command("pactl", "set-sink-input-mute", stream, "toggle")
+				err := cmd.Run()
+				if err != nil {
+					return fmt.Errorf("unable to change mute state: %w", err)
+				}
+			}
+
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unable to find stream %q", stream)
 }
