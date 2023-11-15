@@ -1,4 +1,5 @@
 <script>
+ import Applications from '$lib/components/Applications.svelte';
  import Inputs from '$lib/components/Inputs.svelte';
  import Mixer from '$lib/components/Mixer.svelte';
  import SourceSelection from '$lib/components/SourceSelection.svelte';
@@ -84,6 +85,15 @@
         </div>
 
         <div class="col-md">
+            {#if $activeSources.length > 0}
+                <div class="card my-2">
+                    <h4 class="card-header">
+                        <i class="bi bi-window-stack"></i>
+                        Applications
+                    </h4>
+                    <Applications />
+                </div>
+            {/if}
             <div class="card my-2">
                 <h4 class="card-header">
                     <i class="bi bi-speaker"></i>
