@@ -154,17 +154,17 @@ func (s *PulseaudioInput) SetMixer(stream string, volume *inputs.InputMixer) err
 
 	for _, input := range sinkinputs {
 		if strconv.FormatInt(input.Index, 10) == stream {
-			cmd := exec.Command("pactl", "set-sink-input-volume", stream, strconv.FormatUint(uint64(volume.Volume), 10))
-			err := cmd.Run()
-			if err != nil {
-				return fmt.Errorf("unable to set volume: %w", err)
-			}
-
 			if input.Mute != volume.Mute {
 				cmd := exec.Command("pactl", "set-sink-input-mute", stream, "toggle")
 				err := cmd.Run()
 				if err != nil {
 					return fmt.Errorf("unable to change mute state: %w", err)
+				}
+			} else {
+				cmd := exec.Command("pactl", "set-sink-input-volume", stream, strconv.FormatUint(uint64(volume.Volume), 10))
+				err := cmd.Run()
+				if err != nil {
+					return fmt.Errorf("unable to set volume: %w", err)
 				}
 			}
 
