@@ -7,9 +7,10 @@
  import { activeInputs } from '$lib/stores/inputs';
 
  let mixerAdvanced = false;
+ let showInactiveInputs = false;
 </script>
 
-<div class="my-2">
+<div class="my-3">
     <SourceSelection />
 </div>
 
@@ -37,19 +38,15 @@
                 <div class="d-inline-block me-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            {#await input.streams()}
-                                <div class="spinner-border spinner-border-sm" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div> <span class="text-muted">@ {input.name}</span>
-                            {:then streams}
-                                {#each Object.keys(streams) as idstream}
-                                    {@const title = streams[idstream]}
+                            {#if input.streams.length}
+                                {#each Object.keys(input.streams) as idstream}
+                                    {@const title = input.streams[idstream]}
                                     <strong>{title}</strong>
                                 {/each}
                                 <span class="text-muted">@ {input.name}</span>
-                            {:catch error}
+                            {:else}
                                 {input.name} activée
-                            {/await}
+                            {/if}
                         </div>
                     </div>
                 </div>
@@ -59,7 +56,7 @@
 
     <div class="row">
         <div class="col-md">
-            <div class="card my-2">
+            <div class="card my-3">
                 <h4 class="card-header">
                     <div class="d-flex justify-content-between">
                         <div>
@@ -82,20 +79,36 @@
 
         <div class="col-md">
             {#if $activeSources.length > 0}
-                <div class="card my-2">
+                <div class="card my-3">
                     <h4 class="card-header">
-                        <i class="bi bi-window-stack"></i>
-                        Applications
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <i class="bi bi-window-stack"></i>
+                                Applications
+                            </div>
+                        </div>
                     </h4>
                     <Applications />
                 </div>
             {/if}
-            <div class="card my-2">
+            <div class="card my-3">
                 <h4 class="card-header">
-                    <i class="bi bi-speaker"></i>
-                    Sources
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <i class="bi bi-speaker"></i>
+                            Sources
+                        </div>
+                        <button
+                            class="btn btn-sm"
+                            class:btn-info={showInactiveInputs}
+                            class:btn-secondary={!showInactiveInputs}
+                            on:click={() => { showInactiveInputs = !showInactiveInputs; }}
+                        >
+                            <i class="bi bi-eye-fill"></i>
+                        </button>
+                    </div>
                 </h4>
-                <Inputs />
+                <Inputs showInactive={showInactiveInputs} />
             </div>
         </div>
     </div>
