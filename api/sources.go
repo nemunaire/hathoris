@@ -13,10 +13,11 @@ import (
 )
 
 type SourceState struct {
-	Name        string `json:"name"`
-	Enabled     bool   `json:"enabled"`
-	Active      *bool  `json:"active,omitempty"`
-	Controlable bool   `json:"controlable,omitempty"`
+	Name         string `json:"name"`
+	Enabled      bool   `json:"enabled"`
+	Active       *bool  `json:"active,omitempty"`
+	Controlable  bool   `json:"controlable,omitempty"`
+	CurrentTitle string `json:"currentTitle,omitempty"`
 }
 
 func declareSourcesRoutes(cfg *config.Config, router *gin.RouterGroup) {
@@ -27,11 +28,17 @@ func declareSourcesRoutes(cfg *config.Config, router *gin.RouterGroup) {
 			active := src.IsActive()
 			_, controlable := src.(inputs.ControlableInput)
 
+			var title string
+			if s, ok := src.(sources.PlayingSource); ok && active {
+				title = s.CurrentlyPlaying()
+			}
+
 			ret[k] = &SourceState{
-				Name:        src.GetName(),
-				Enabled:     src.IsEnabled(),
-				Active:      &active,
-				Controlable: controlable,
+				Name:         src.GetName(),
+				Enabled:      src.IsEnabled(),
+				Active:       &active,
+				Controlable:  controlable,
+				CurrentTitle: title,
 			}
 		}
 
@@ -45,11 +52,19 @@ func declareSourcesRoutes(cfg *config.Config, router *gin.RouterGroup) {
 		src := c.MustGet("source").(sources.SoundSource)
 
 		active := src.IsActive()
+		_, controlable := src.(inputs.ControlableInput)
+
+		var title string
+		if s, ok := src.(sources.PlayingSource); ok && active {
+			title = s.CurrentlyPlaying()
+		}
 
 		c.JSON(http.StatusOK, &SourceState{
-			Name:    src.GetName(),
-			Enabled: src.IsEnabled(),
-			Active:  &active,
+			Name:         src.GetName(),
+			Enabled:      src.IsEnabled(),
+			Active:       &active,
+			Controlable:  controlable,
+			CurrentTitle: title,
 		})
 	})
 	sourcesRoutes.GET("/settings", func(c *gin.Context) {

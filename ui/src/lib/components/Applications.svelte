@@ -4,16 +4,12 @@
 
 <ul class="list-group list-group-flush">
     {#each $activeSources as source}
-        <li class="list-group-item py-3 d-flex justify-content-between">
+        <li class="list-group-item py-3 d-flex justify-content-between align-items-center">
             <div>
                 <strong>{source.name}</strong>
-                {#await source.currently()}
-                    <div class="spinner-border spinner-border-sm" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                {:then title}
-                    <span class="text-muted">{title}</span>
-                {/await}
+                {#if source.currentTitle}
+                    <span class="text-muted">{source.currentTitle}</span>
+                {/if}
             </div>
             {#if source.controlable}
                 <div>
