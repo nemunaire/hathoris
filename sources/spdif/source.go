@@ -77,7 +77,9 @@ func (s *SPDIFSource) Enable() error {
 	go func() {
 		err := s.processPlay.Wait()
 		if err != nil {
-			s.processPlay.Process.Kill()
+			if s.processPlay != nil && s.processPlay.Process != nil {
+				s.processPlay.Process.Kill()
+			}
 			pipeR.Close()
 			pipeW.Close()
 		}
