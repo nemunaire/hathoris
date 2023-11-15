@@ -24,15 +24,11 @@
                 <div class="d-inline-block me-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            {#await source.currently()}
-                                <div class="spinner-border spinner-border-sm" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div> <span class="text-muted">@ {source.name}</span>
-                            {:then title}
-                                <strong>{title}</strong> <span class="text-muted">@ {source.name}</span>
-                            {:catch error}
+                            {#if source.currentTitle}
+                                <strong>{source.currentTitle}</strong> <span class="text-muted">@ {source.name}</span>
+                            {:else}
                                 {source.name} activée
-                            {/await}
+                            {/if}
                         </div>
                     </div>
                 </div>

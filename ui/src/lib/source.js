@@ -6,11 +6,12 @@ export class Source {
     }
   }
 
-  update({ name, enabled, active, controlable }) {
+  update({ name, enabled, active, controlable, currentTitle }) {
     this.name = name;
     this.enabled = enabled;
     this.active = active;
     this.controlable = controlable;
+    this.currentTitle = currentTitle;
   }
 
   async activate() {

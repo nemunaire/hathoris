@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"os/exec"
 	"strconv"
@@ -285,7 +284,6 @@ func (cc *CardControl) CsetAmixer(values ...string) error {
 		fmt.Sprintf("numid=%d", cc.NumID),
 	}
 	opts = append(opts, strings.Join(values, ","))
-	log.Println(opts)
 	cmd := exec.Command("amixer", opts...)
 
 	if err := cmd.Start(); err != nil {
