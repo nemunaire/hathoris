@@ -6,13 +6,16 @@ export class Input {
     }
   }
 
-  update({ name, active, controlable }) {
+  update({ name, active, controlable, streams, mixable, mixer }) {
     this.name = name;
     this.active = active;
     this.controlable = controlable;
+    this.streams = streams;
+    this.mixable = mixable;
+    this.mixer = mixer;
   }
 
-  async streams() {
+  async getStreams() {
     const data = await fetch(`api/inputs/${this.id}/streams`, {headers: {'Accept': 'application/json'}});
     if (data.status == 200) {
       return await data.json();
