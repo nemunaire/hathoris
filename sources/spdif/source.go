@@ -52,7 +52,7 @@ func (s *SPDIFSource) IsActive() bool {
 }
 
 func (s *SPDIFSource) IsEnabled() bool {
-	return s.processRec != nil
+	return s.processRec != nil || s.processPlay != nil
 }
 
 func (s *SPDIFSource) Enable() error {
@@ -80,9 +80,8 @@ func (s *SPDIFSource) Enable() error {
 			if s.processPlay != nil && s.processPlay.Process != nil {
 				s.processPlay.Process.Kill()
 			}
-			pipeR.Close()
-			pipeW.Close()
 		}
+		pipeR.Close()
 
 		s.processPlay = nil
 	}()
@@ -99,6 +98,7 @@ func (s *SPDIFSource) Enable() error {
 		if err != nil {
 			s.processRec.Process.Kill()
 		}
+		pipeW.Close()
 
 		s.processRec = nil
 	}()
