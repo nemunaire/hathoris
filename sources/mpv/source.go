@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"time"
 
 	"github.com/DexterLB/mpvipc"
@@ -13,25 +14,21 @@ import (
 )
 
 type MPVSource struct {
-	process   *exec.Cmd
-	ipcSocket string
-	Name      string
-	Options   []string
-	File      string
+	process      *exec.Cmd
+	ipcSocketDir string
+	Name         string
+	Options      []string
+	File         string
 }
 
 func init() {
-	sources.SoundSources["mpv-1"] = &MPVSource{
-		Name:      "Radio 1",
-		ipcSocket: "/tmp/tmpmpv.radio-1",
-		Options:   []string{"--no-video", "--no-terminal"},
-		File:      "https://mediaserv38.live-streams.nl:18030/stream",
+	sources.SoundSources["mpv-nig"] = &MPVSource{
+		Name: "Radio NIG",
+		File: "https://mediaserv38.live-streams.nl:18030/stream",
 	}
-	sources.SoundSources["mpv-2"] = &MPVSource{
-		Name:      "Radio 2",
-		ipcSocket: "/tmp/tmpmpv.radio-2",
-		Options:   []string{"--no-video", "--no-terminal"},
-		File:      "https://mediaserv38.live-streams.nl:18040/live",
+	sources.SoundSources["mpv-synthfm"] = &MPVSource{
+		Name: "Radio Synthetic FM",
+		File: "https://mediaserv38.live-streams.nl:18040/live",
 	}
 }
 
@@ -47,15 +44,20 @@ func (s *MPVSource) IsEnabled() bool {
 	return s.process != nil
 }
 
+func (s *MPVSource) ipcSocket() string {
+	return path.Join(s.ipcSocketDir, "mpv.socket")
+}
+
 func (s *MPVSource) Enable() (err error) {
 	if s.process != nil {
 		return fmt.Errorf("Already running")
 	}
 
-	var opts []string
-	opts = append(opts, s.Options...)
-	if s.ipcSocket != "" {
-		opts = append(opts, "--input-ipc-server="+s.ipcSocket, "--pause")
+	s.ipcSocketDir, err = os.MkdirTemp("", "hathoris")
+
+	opts := append([]string{"--no-video", "--no-terminal"}, s.Options...)
+	if s.ipcSocketDir != "" {
+		opts = append(opts, "--input-ipc-server="+s.ipcSocket(), "--pause")
 	}
 	opts = append(opts, s.File)
 
@@ -70,18 +72,22 @@ func (s *MPVSource) Enable() (err error) {
 			s.process.Process.Kill()
 		}
 
+		if s.ipcSocketDir != "" {
+			os.RemoveAll(s.ipcSocketDir)
+		}
+
 		s.process = nil
 	}()
 
-	if s.ipcSocket != "" {
-		_, err = os.Stat(s.ipcSocket)
+	if s.ipcSocketDir != "" {
+		_, err = os.Stat(s.ipcSocket())
 		for i := 20; i >= 0 && err != nil; i-- {
 			time.Sleep(100 * time.Millisecond)
-			_, err = os.Stat(s.ipcSocket)
+			_, err = os.Stat(s.ipcSocket())
 		}
 		time.Sleep(200 * time.Millisecond)
 
-		conn := mpvipc.NewConnection(s.ipcSocket)
+		conn := mpvipc.NewConnection(s.ipcSocket())
 		err = conn.Open()
 		for i := 20; i >= 0 && err != nil; i-- {
 			time.Sleep(100 * time.Millisecond)
@@ -145,11 +151,13 @@ func (s *MPVSource) FadeOut(conn *mpvipc.Connection, speed int) {
 func (s *MPVSource) Disable() error {
 	if s.process != nil {
 		if s.process.Process != nil {
-			conn := mpvipc.NewConnection(s.ipcSocket)
-			err := conn.Open()
-			if err == nil {
-				s.FadeOut(conn, 3)
-				conn.Close()
+			if s.ipcSocketDir != "" {
+				conn := mpvipc.NewConnection(s.ipcSocket())
+				err := conn.Open()
+				if err == nil {
+					s.FadeOut(conn, 3)
+					conn.Close()
+				}
 			}
 
 			s.process.Process.Kill()
@@ -160,8 +168,8 @@ func (s *MPVSource) Disable() error {
 }
 
 func (s *MPVSource) CurrentlyPlaying() string {
-	if s.ipcSocket != "" {
-		conn := mpvipc.NewConnection(s.ipcSocket)
+	if s.ipcSocketDir != "" {
+		conn := mpvipc.NewConnection(s.ipcSocket())
 		err := conn.Open()
 		if err != nil {
 			log.Println("Unable to open mpv socket:", err.Error())
@@ -181,11 +189,11 @@ func (s *MPVSource) CurrentlyPlaying() string {
 }
 
 func (s *MPVSource) TogglePause(id string) error {
-	if s.ipcSocket == "" {
+	if s.ipcSocketDir == "" {
 		return fmt.Errorf("Not supported")
 	}
 
-	conn := mpvipc.NewConnection(s.ipcSocket)
+	conn := mpvipc.NewConnection(s.ipcSocket())
 	err := conn.Open()
 	if err != nil {
 		return err
