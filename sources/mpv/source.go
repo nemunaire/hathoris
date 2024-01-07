@@ -30,6 +30,14 @@ func init() {
 		Name: "Radio Synthetic FM",
 		File: "https://mediaserv38.live-streams.nl:18040/live",
 	}
+	sources.SoundSources["mpv-nrw"] = &MPVSource{
+		Name: "NewRetroWave",
+		File: "https://youtube.com/channel/UCD-4g5w1h8xQpLaNS_ghU4g/videos",
+	}
+	sources.SoundSources["mpv-abgt"] = &MPVSource{
+		Name: "ABGT",
+		File: "https://youtube.com/playlist?list=PL6RLee9oArCArCAjnOtZ17dlVZQxaHG8G",
+	}
 }
 
 func (s *MPVSource) GetName() string {
