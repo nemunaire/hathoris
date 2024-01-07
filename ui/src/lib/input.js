@@ -6,10 +6,11 @@ export class Input {
     }
   }
 
-  update({ name, active, controlable, streams, mixable, mixer }) {
+  update({ name, active, controlable, hasplaylist, streams, mixable, mixer }) {
     this.name = name;
     this.active = active;
     this.controlable = controlable;
+    this.hasplaylist = hasplaylist;
     this.streams = streams;
     this.mixable = mixable;
     this.mixer = mixer;
@@ -26,6 +27,20 @@ export class Input {
 
   async playpause(idstream) {
     const data = await fetch(`api/inputs/${this.id}/streams/${idstream}/pause`, {headers: {'Accept': 'application/json'}, method: 'POST'});
+    if (data.status != 200) {
+      throw new Error((await res.json()).errmsg);
+    }
+  }
+
+  async nexttrack(idstream) {
+    const data = await fetch(`api/inputs/${this.id}/streams/${idstream}/next_track`, {headers: {'Accept': 'application/json'}, method: 'POST'});
+    if (data.status != 200) {
+      throw new Error((await res.json()).errmsg);
+    }
+  }
+
+  async prevtrack(idstream) {
+    const data = await fetch(`api/inputs/${this.id}/streams/${idstream}/prev_track`, {headers: {'Accept': 'application/json'}, method: 'POST'});
     if (data.status != 200) {
       throw new Error((await res.json()).errmsg);
     }

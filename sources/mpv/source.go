@@ -228,3 +228,63 @@ func (s *MPVSource) TogglePause(id string) error {
 
 	return nil
 }
+
+func (s *MPVSource) HasPlaylist() bool {
+	if s.ipcSocketDir == "" {
+		return false
+	}
+
+	conn := mpvipc.NewConnection(s.ipcSocket())
+	err := conn.Open()
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+
+	plistCount, err := conn.Get("playlist-count")
+	if err != nil {
+		return false
+	}
+
+	return plistCount.(float64) > 1
+}
+
+func (s *MPVSource) NextTrack() error {
+	if s.ipcSocketDir == "" {
+		return fmt.Errorf("Not supported")
+	}
+
+	conn := mpvipc.NewConnection(s.ipcSocket())
+	err := conn.Open()
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	_, err = conn.Call("playlist-next", "weak")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *MPVSource) PreviousTrack() error {
+	if s.ipcSocketDir == "" {
+		return fmt.Errorf("Not supported")
+	}
+
+	conn := mpvipc.NewConnection(s.ipcSocket())
+	err := conn.Open()
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	_, err = conn.Call("playlist-prev", "weak")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
