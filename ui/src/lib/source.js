@@ -6,11 +6,12 @@ export class Source {
     }
   }
 
-  update({ name, enabled, active, controlable, currentTitle }) {
+  update({ name, enabled, active, controlable, hasplaylist, currentTitle }) {
     this.name = name;
     this.enabled = enabled;
     this.active = active;
     this.controlable = controlable;
+    this.hasplaylist = hasplaylist;
     this.currentTitle = currentTitle;
   }
 
@@ -33,6 +34,20 @@ export class Source {
 
   async playpause() {
     const data = await fetch(`api/sources/${this.id}/pause`, {headers: {'Accept': 'application/json'}, method: 'POST'});
+    if (data.status != 200) {
+      throw new Error((await res.json()).errmsg);
+    }
+  }
+
+  async nexttrack() {
+    const data = await fetch(`api/sources/${this.id}/next_track`, {headers: {'Accept': 'application/json'}, method: 'POST'});
+    if (data.status != 200) {
+      throw new Error((await res.json()).errmsg);
+    }
+  }
+
+  async prevtrack() {
+    const data = await fetch(`api/sources/${this.id}/prev_track`, {headers: {'Accept': 'application/json'}, method: 'POST'});
     if (data.status != 200) {
       throw new Error((await res.json()).errmsg);
     }

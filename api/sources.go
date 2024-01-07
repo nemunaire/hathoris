@@ -17,6 +17,7 @@ type SourceState struct {
 	Enabled      bool   `json:"enabled"`
 	Active       *bool  `json:"active,omitempty"`
 	Controlable  bool   `json:"controlable,omitempty"`
+	HasPlaylist  bool   `json:"hasplaylist,omitempty"`
 	CurrentTitle string `json:"currentTitle,omitempty"`
 }
 
@@ -28,6 +29,11 @@ func declareSourcesRoutes(cfg *config.Config, router *gin.RouterGroup) {
 			active := src.IsActive()
 			_, controlable := src.(inputs.ControlableInput)
 
+			var hasPlaylist bool
+			if p, withPlaylist := src.(inputs.PlaylistInput); withPlaylist {
+				hasPlaylist = p.HasPlaylist()
+			}
+
 			var title string
 			if s, ok := src.(sources.PlayingSource); ok && active {
 				title = s.CurrentlyPlaying()
@@ -38,6 +44,7 @@ func declareSourcesRoutes(cfg *config.Config, router *gin.RouterGroup) {
 				Enabled:      src.IsEnabled(),
 				Active:       &active,
 				Controlable:  controlable,
+				HasPlaylist:  hasPlaylist,
 				CurrentTitle: title,
 			}
 		}
@@ -54,6 +61,11 @@ func declareSourcesRoutes(cfg *config.Config, router *gin.RouterGroup) {
 		active := src.IsActive()
 		_, controlable := src.(inputs.ControlableInput)
 
+		var hasPlaylist bool
+		if p, withPlaylist := src.(inputs.PlaylistInput); withPlaylist {
+			hasPlaylist = p.HasPlaylist()
+		}
+
 		var title string
 		if s, ok := src.(sources.PlayingSource); ok && active {
 			title = s.CurrentlyPlaying()
@@ -64,6 +76,7 @@ func declareSourcesRoutes(cfg *config.Config, router *gin.RouterGroup) {
 			Enabled:      src.IsEnabled(),
 			Active:       &active,
 			Controlable:  controlable,
+			HasPlaylist:  hasPlaylist,
 			CurrentTitle: title,
 		})
 	})
@@ -123,6 +136,8 @@ func declareSourcesRoutes(cfg *config.Config, router *gin.RouterGroup) {
 
 		c.JSON(http.StatusOK, true)
 	})
+
+	// ControlableInput
 	sourcesRoutes.POST("/pause", func(c *gin.Context) {
 		src := c.MustGet("source").(sources.SoundSource)
 
@@ -138,6 +153,68 @@ func declareSourcesRoutes(cfg *config.Config, router *gin.RouterGroup) {
 		}
 
 		c.JSON(http.StatusOK, s.TogglePause("default"))
+	})
+
+	// PlaylistInput
+	sourcesRoutes.POST("/has_playlist", func(c *gin.Context) {
+		src := c.MustGet("source").(sources.SoundSource)
+
+		if !src.IsActive() {
+			c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"errmsg": "Source not active"})
+			return
+		}
+
+		s, ok := src.(inputs.PlaylistInput)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"errmsg": "The source doesn't support"})
+			return
+		}
+
+		c.JSON(http.StatusOK, s.HasPlaylist())
+	})
+	sourcesRoutes.POST("/next_track", func(c *gin.Context) {
+		src := c.MustGet("source").(sources.SoundSource)
+
+		if !src.IsActive() {
+			c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"errmsg": "Source not active"})
+			return
+		}
+
+		s, ok := src.(inputs.PlaylistInput)
+		if !ok || !s.HasPlaylist() {
+			c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"errmsg": "The source doesn't support"})
+			return
+		}
+
+		err := s.NextTrack()
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"errmsg": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, true)
+	})
+	sourcesRoutes.POST("/prev_track", func(c *gin.Context) {
+		src := c.MustGet("source").(sources.SoundSource)
+
+		if !src.IsActive() {
+			c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"errmsg": "Source not active"})
+			return
+		}
+
+		s, ok := src.(inputs.PlaylistInput)
+		if !ok || !s.HasPlaylist() {
+			c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"errmsg": "The source doesn't support"})
+			return
+		}
+
+		err := s.PreviousTrack()
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"errmsg": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, true)
 	})
 }
 

@@ -22,6 +22,12 @@ type ControlableInput interface {
 	TogglePause(string) error
 }
 
+type PlaylistInput interface {
+	HasPlaylist() bool
+	NextTrack() error
+	PreviousTrack() error
+}
+
 type MixableInput interface {
 	GetMixers() (map[string]*InputMixer, error)
 	SetMixer(string, *InputMixer) error
