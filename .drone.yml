@@ -13,7 +13,7 @@ workspace:
 
 steps:
 - name: build front
-  image: node:20-alpine
+  image: node:21
   commands:
     - mkdir deploy
     - cd ui
