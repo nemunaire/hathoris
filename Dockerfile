@@ -1,4 +1,4 @@
-FROM node:20-alpine as nodebuild
+FROM node:21 as nodebuild
 
 WORKDIR /ui
 
