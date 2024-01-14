@@ -24,6 +24,7 @@
                             <button
                                 class="btn btn-sm btn-primary"
                                 on:click={() => source.nexttrack()}
+                                on:dblclick={() => source.nextrandomtrack()}
                             >
                                 <i class="bi bi-skip-forward-fill"></i>
                             </button>

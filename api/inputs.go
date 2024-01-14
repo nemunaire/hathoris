@@ -162,6 +162,21 @@ func declareInputsRoutes(cfg *config.Config, router *gin.RouterGroup) {
 
 		c.JSON(http.StatusOK, true)
 	})
+	streamRoutes.POST("/next_random_track", func(c *gin.Context) {
+		input, ok := c.MustGet("input").(inputs.PlaylistInput)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"errmsg": "The source doesn't support that"})
+			return
+		}
+
+		err := input.NextRandomTrack()
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"errmsg": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, true)
+	})
 	streamRoutes.POST("/prev_track", func(c *gin.Context) {
 		input, ok := c.MustGet("input").(inputs.PlaylistInput)
 		if !ok {

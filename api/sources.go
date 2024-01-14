@@ -194,6 +194,28 @@ func declareSourcesRoutes(cfg *config.Config, router *gin.RouterGroup) {
 
 		c.JSON(http.StatusOK, true)
 	})
+	sourcesRoutes.POST("/next_random_track", func(c *gin.Context) {
+		src := c.MustGet("source").(sources.SoundSource)
+
+		if !src.IsActive() {
+			c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"errmsg": "Source not active"})
+			return
+		}
+
+		s, ok := src.(inputs.PlaylistInput)
+		if !ok || !s.HasPlaylist() {
+			c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"errmsg": "The source doesn't support"})
+			return
+		}
+
+		err := s.NextRandomTrack()
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"errmsg": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, true)
+	})
 	sourcesRoutes.POST("/prev_track", func(c *gin.Context) {
 		src := c.MustGet("source").(sources.SoundSource)
 

@@ -25,6 +25,7 @@ type ControlableInput interface {
 type PlaylistInput interface {
 	HasPlaylist() bool
 	NextTrack() error
+	NextRandomTrack() error
 	PreviousTrack() error
 }
 

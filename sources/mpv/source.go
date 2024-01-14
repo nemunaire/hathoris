@@ -269,6 +269,36 @@ func (s *MPVSource) NextTrack() error {
 	return nil
 }
 
+func (s *MPVSource) NextRandomTrack() error {
+	if s.ipcSocketDir == "" {
+		return fmt.Errorf("Not supported")
+	}
+
+	conn := mpvipc.NewConnection(s.ipcSocket())
+	err := conn.Open()
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	_, err = conn.Call("playlist-shuffle")
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Call("playlist-next", "weak")
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Call("playlist-unshuffle")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *MPVSource) PreviousTrack() error {
 	if s.ipcSocketDir == "" {
 		return fmt.Errorf("Not supported")
