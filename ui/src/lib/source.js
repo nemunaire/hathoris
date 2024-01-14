@@ -46,6 +46,13 @@ export class Source {
     }
   }
 
+  async nextrandomtrack() {
+    const data = await fetch(`api/sources/${this.id}/next_random_track`, {headers: {'Accept': 'application/json'}, method: 'POST'});
+    if (data.status != 200) {
+      throw new Error((await res.json()).errmsg);
+    }
+  }
+
   async prevtrack() {
     const data = await fetch(`api/sources/${this.id}/prev_track`, {headers: {'Accept': 'application/json'}, method: 'POST'});
     if (data.status != 200) {

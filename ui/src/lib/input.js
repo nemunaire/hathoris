@@ -39,6 +39,13 @@ export class Input {
     }
   }
 
+  async nextrandomtrack(idstream) {
+    const data = await fetch(`api/inputs/${this.id}/streams/${idstream}/next_random_track`, {headers: {'Accept': 'application/json'}, method: 'POST'});
+    if (data.status != 200) {
+      throw new Error((await res.json()).errmsg);
+    }
+  }
+
   async prevtrack(idstream) {
     const data = await fetch(`api/inputs/${this.id}/streams/${idstream}/prev_track`, {headers: {'Accept': 'application/json'}, method: 'POST'});
     if (data.status != 200) {
