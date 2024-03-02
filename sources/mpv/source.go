@@ -24,11 +24,11 @@ type MPVSource struct {
 func init() {
 	sources.SoundSources["mpv-nig"] = &MPVSource{
 		Name: "Radio NIG",
-		File: "https://mediaserv38.live-streams.nl:18030/stream",
+		File: "http://stream.syntheticfm.com:8030/stream",
 	}
 	sources.SoundSources["mpv-synthfm"] = &MPVSource{
 		Name: "Radio Synthetic FM",
-		File: "https://mediaserv38.live-streams.nl:18040/live",
+		File: "http://stream.syntheticfm.com:8040/stream",
 	}
 	sources.SoundSources["mpv-nrw"] = &MPVSource{
 		Name: "NewRetroWave",
