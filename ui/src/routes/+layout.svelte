@@ -17,7 +17,7 @@
     <title>Hathoris</title>
 </svelte:head>
 
-<div class="flex-fill d-flex flex-column bg-light">
+<div class="flex-fill d-flex flex-column">
     <div class="container-fluid flex-fill d-flex flex-column justify-content-center">
         <slot></slot>
     </div>
