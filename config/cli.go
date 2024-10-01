@@ -9,6 +9,7 @@ func (c *Config) declareFlags() {
 	flag.StringVar(&c.BaseURL, "baseurl", c.BaseURL, "URL prepended to each URL")
 	flag.StringVar(&c.Bind, "bind", c.Bind, "Bind port/socket")
 	flag.StringVar(&c.DevProxy, "dev", c.DevProxy, "Use ui directory instead of embedded assets")
+	flag.StringVar(&c.SettingsPath, "settings-file", c.SettingsPath, "Path to settings.json file")
 
 	// Others flags are declared in some other files when they need specials configurations
 }
@@ -16,7 +17,8 @@ func (c *Config) declareFlags() {
 func Consolidated() (cfg *Config, err error) {
 	// Define defaults options
 	cfg = &Config{
-		Bind: "127.0.0.1:8080",
+		Bind:         "127.0.0.1:8080",
+		SettingsPath: "settings.json",
 	}
 
 	cfg.declareFlags()

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/DexterLB/mpvipc"
@@ -22,22 +23,25 @@ type MPVSource struct {
 }
 
 func init() {
-	sources.SoundSources["mpv-nig"] = &MPVSource{
-		Name: "Radio NIG",
-		File: "http://stream.syntheticfm.com:8030/stream",
+	sources.LoadableSources["mpv"] = NewMPVSource
+}
+
+func NewMPVSource(kv map[string]string) (sources.SoundSource, error) {
+	var s MPVSource
+
+	if name, ok := kv["name"]; ok {
+		s.Name = name
 	}
-	sources.SoundSources["mpv-synthfm"] = &MPVSource{
-		Name: "Radio Synthetic FM",
-		File: "http://stream.syntheticfm.com:8040/stream",
+
+	if opts, ok := kv["opts"]; ok {
+		s.Options = strings.Split(opts, " ")
 	}
-	sources.SoundSources["mpv-nrw"] = &MPVSource{
-		Name: "NewRetroWave",
-		File: "https://youtube.com/channel/UCD-4g5w1h8xQpLaNS_ghU4g/videos",
+
+	if file, ok := kv["file"]; ok {
+		s.File = file
 	}
-	sources.SoundSources["mpv-abgt"] = &MPVSource{
-		Name: "ABGT",
-		File: "https://youtube.com/playlist?list=PL6RLee9oArCArCAjnOtZ17dlVZQxaHG8G",
-	}
+
+	return &s, nil
 }
 
 func (s *MPVSource) GetName() string {

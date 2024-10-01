@@ -2,7 +2,10 @@ package sources
 
 import ()
 
-var SoundSources = map[string]SoundSource{}
+var (
+	LoadableSources = map[string]LoadaleSource{}
+	SoundSources    = map[string]SoundSource{}
+)
 
 type SoundSource interface {
 	GetName() string
@@ -15,3 +18,5 @@ type SoundSource interface {
 type PlayingSource interface {
 	CurrentlyPlaying() string
 }
+
+type LoadaleSource func(map[string]string) (SoundSource, error)
