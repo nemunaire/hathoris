@@ -124,10 +124,9 @@ func (s *MPVSource) Enable() (err error) {
 		}
 
 		var pfc interface{}
-		pfc, err = conn.Get("paused-for-cache")
-		for err == nil && !pfc.(bool) {
+		for err == nil && pfc.(bool) {
 			time.Sleep(250 * time.Millisecond)
-			pfc, err = conn.Get("paused-for-cache")
+			pfc, err = conn.Get("core-idle")
 		}
 		err = nil
 
