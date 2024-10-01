@@ -6,9 +6,10 @@ import (
 )
 
 type Config struct {
-	DevProxy string
-	Bind     string
-	BaseURL  string
+	DevProxy     string
+	Bind         string
+	BaseURL      string
+	SettingsPath string
 }
 
 // parseLine treats a config line and place the read value in the variable
