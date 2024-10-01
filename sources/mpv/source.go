@@ -67,7 +67,7 @@ func (s *MPVSource) Enable() (err error) {
 
 	s.ipcSocketDir, err = os.MkdirTemp("", "hathoris")
 
-	opts := append([]string{"--no-video", "--no-terminal"}, s.Options...)
+	opts := append([]string{"--no-video", "--no-terminal", "--prefetch-playlist=yes"}, s.Options...)
 	if s.ipcSocketDir != "" {
 		opts = append(opts, "--input-ipc-server="+s.ipcSocket(), "--pause")
 	}
