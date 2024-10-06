@@ -1,6 +1,7 @@
 package mpv
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -75,13 +76,23 @@ func (s *MPVSource) Enable() (err error) {
 
 	s.process = exec.Command("mpv", opts...)
 	if err = s.process.Start(); err != nil {
+		log.Println("Unable to launch mpv:", err.Error())
 		return
 	}
 
 	go func() {
 		err := s.process.Wait()
 		if err != nil {
-			s.process.Process.Kill()
+			var exiterr *exec.ExitError
+			if errors.As(err, &exiterr) {
+				if exiterr.ExitCode() > 0 {
+					log.Printf("mpv exited with error code = %d", exiterr.ExitCode())
+				} else {
+					log.Print("mpv exited successfully")
+				}
+			} else {
+				s.process.Process.Kill()
+			}
 		}
 
 		if s.ipcSocketDir != "" {
@@ -106,6 +117,7 @@ func (s *MPVSource) Enable() (err error) {
 			err = conn.Open()
 		}
 		if err != nil {
+			log.Println("Unable to connect to mpv socket:", err.Error())
 			return err
 		}
 		defer conn.Close()
@@ -120,15 +132,21 @@ func (s *MPVSource) Enable() (err error) {
 
 		err = conn.Set("pause", false)
 		if err != nil {
+			log.Println("Unable to unpause:", err.Error())
 			return err
 		}
 
 		var pfc interface{}
+		pfc, err = conn.Get("core-idle")
+
 		for err == nil && pfc.(bool) {
 			time.Sleep(250 * time.Millisecond)
 			pfc, err = conn.Get("core-idle")
 		}
-		err = nil
+
+		if err != nil {
+			log.Println("Unable to retrieve core-idle status:", err.Error())
+		}
 
 		s.FadeIn(conn, 3, 50)
 	}
