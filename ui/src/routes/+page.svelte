@@ -2,7 +2,6 @@
  import Applications from '$lib/components/Applications.svelte';
  import Inputs from '$lib/components/Inputs.svelte';
  import Mixer from '$lib/components/Mixer.svelte';
- import SourceSelection from '$lib/components/SourceSelection.svelte';
  import { activeSources } from '$lib/stores/sources';
  import { activeInputs } from '$lib/stores/inputs';
 
@@ -10,50 +9,7 @@
  let showInactiveInputs = false;
 </script>
 
-<div class="my-3">
-    <SourceSelection />
-</div>
-
 <div class="container">
-    {#if $activeSources.length === 0 && $activeInputs.length === 0}
-        <div class="text-muted text-center mt-1 mb-1">
-            Aucune source active pour l'instant.
-        </div>
-    {:else}
-        <marquee>
-            {#each $activeSources as source}
-                <div class="d-inline-block me-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            {#if source.currentTitle}
-                                <strong>{source.currentTitle}</strong> <span class="text-muted">@ {source.name}</span>
-                            {:else}
-                                {source.name} activée
-                            {/if}
-                        </div>
-                    </div>
-                </div>
-            {/each}
-            {#each $activeInputs as input}
-                <div class="d-inline-block me-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            {#if input.streams.length}
-                                {#each Object.keys(input.streams) as idstream}
-                                    {@const title = input.streams[idstream]}
-                                    <strong>{title}</strong>
-                                {/each}
-                                <span class="text-muted">@ {input.name}</span>
-                            {:else}
-                                {input.name} activée
-                            {/if}
-                        </div>
-                    </div>
-                </div>
-            {/each}
-        </marquee>
-    {/if}
-
     <div class="row">
         <div class="col-md">
             <div class="card my-3">
