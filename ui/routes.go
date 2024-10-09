@@ -64,6 +64,7 @@ func DeclareRoutes(router *gin.Engine, cfg *config.Config) {
 	}
 
 	router.GET("/", serveOrReverse("", cfg))
+	router.GET("/settings", serveOrReverse("", cfg))
 
 	router.GET("/_app/*_", serveOrReverse("", cfg))
 	router.GET("/img/*_", serveOrReverse("", cfg))

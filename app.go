@@ -49,7 +49,9 @@ func NewApp(cfg *config.Config) *App {
 
 	// Register routes
 	ui.DeclareRoutes(router, cfg)
-	api.DeclareRoutes(router, cfg)
+	api.DeclareRoutes(router, cfg, func() *settings.Settings {
+		return app.settings
+	}, app.loadCustomSources)
 
 	router.GET("/api/version", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"version": Version})
@@ -79,6 +81,21 @@ func (app *App) loadCustomSources() error {
 			}
 
 			sources.SoundSources[fmt.Sprintf("%s-%d", csrc.Source, id)] = src
+		}
+	}
+
+	// Delete old custom sources, no more in config
+	for id1 := range sources.SoundSources {
+		found := false
+		for id2, csrc := range app.settings.CustomSources {
+			if id1 == fmt.Sprintf("%s-%d", csrc.Source, id2) {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			delete(sources.SoundSources, id1)
 		}
 	}
 

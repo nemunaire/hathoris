@@ -10,6 +10,7 @@
  inputs.refresh();
  setInterval(inputs.refresh, 4500);
 
+ import SettingsButton from '$lib/components/SettingsButton.svelte';
  import SourceSelection from '$lib/components/SourceSelection.svelte';
 
  const version = fetch('api/version', {headers: {'Accept': 'application/json'}}).then((res) => res.json())
@@ -21,6 +22,10 @@
 
 <div class="flex-fill d-flex flex-column">
     <div class="container-fluid flex-fill d-flex flex-column justify-content-start">
+        <div class="position-absolute" style="right: 0.5rem">
+            <SettingsButton />
+        </div>
+
         <div class="my-3">
             <SourceSelection />
         </div>
