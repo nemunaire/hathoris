@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"strings"
 	"time"
 
 	"github.com/DexterLB/mpvipc"
@@ -18,31 +17,23 @@ import (
 type MPVSource struct {
 	process      *exec.Cmd
 	ipcSocketDir string
-	Name         string
-	Options      []string
-	File         string
+	Name         string   `json:"name"`
+	Options      []string `json:"opts"`
+	File         string   `json:"file"`
 }
 
 func init() {
-	sources.LoadableSources["mpv"] = NewMPVSource
+	sources.LoadableSources["mpv"] = sources.LoadaleSource{
+		LoadSource:       NewMPVSource,
+		Description:      "Play any file, stream or URL through mpv",
+		SourceDefinition: &MPVSource{},
+	}
 }
 
-func NewMPVSource(kv map[string]string) (sources.SoundSource, error) {
+func NewMPVSource(kv map[string]interface{}) (sources.SoundSource, error) {
 	var s MPVSource
-
-	if name, ok := kv["name"]; ok {
-		s.Name = name
-	}
-
-	if opts, ok := kv["opts"]; ok {
-		s.Options = strings.Split(opts, " ")
-	}
-
-	if file, ok := kv["file"]; ok {
-		s.File = file
-	}
-
-	return &s, nil
+	err := sources.Unmarshal(kv, &s)
+	return &s, err
 }
 
 func (s *MPVSource) GetName() string {

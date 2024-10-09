@@ -1,6 +1,8 @@
 package sources
 
-import ()
+import (
+	"encoding/json"
+)
 
 var (
 	LoadableSources = map[string]LoadaleSource{}
@@ -19,4 +21,17 @@ type PlayingSource interface {
 	CurrentlyPlaying() string
 }
 
-type LoadaleSource func(map[string]string) (SoundSource, error)
+type LoadaleSource struct {
+	LoadSource       func(map[string]interface{}) (SoundSource, error)
+	Description      string
+	SourceDefinition interface{}
+}
+
+func Unmarshal(in map[string]interface{}, out interface{}) error {
+	jin, err := json.Marshal(in)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(jin, out)
+}
