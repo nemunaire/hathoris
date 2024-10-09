@@ -73,7 +73,7 @@ func (app *App) loadCustomSources() error {
 		if newss, ok := sources.LoadableSources[csrc.Source]; !ok {
 			return fmt.Errorf("Unable to load source #%d: %q: no such source registered", id, csrc.Source)
 		} else {
-			src, err := newss(csrc.KV)
+			src, err := newss.LoadSource(csrc.KV)
 			if err != nil {
 				return fmt.Errorf("Unable to load source #%d (%s): %w", id, csrc.Source, err)
 			}

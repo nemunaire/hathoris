@@ -9,8 +9,8 @@ import (
 )
 
 type CustomSource struct {
-	Source string            `json:"src"`
-	KV     map[string]string `json:"kv"`
+	Source string                 `json:"src"`
+	KV     map[string]interface{} `json:"kv"`
 }
 
 type Settings struct {
