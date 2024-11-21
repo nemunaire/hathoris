@@ -114,7 +114,12 @@ type CardControlState struct {
 }
 
 func ParseAmixerContent(cardId string) ([]*CardControl, error) {
-	cmd := exec.Command("amixer", "-c", cardId, "-M", "contents")
+	cardIdType := "-D"
+	if _, err := strconv.Atoi(cardId); err == nil {
+		cardIdType = "-c"
+	}
+
+	cmd := exec.Command("amixer", cardIdType, cardId, "-M", "contents")
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
