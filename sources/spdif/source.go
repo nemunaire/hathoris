@@ -86,7 +86,7 @@ func (s *SPDIFSource) Enable() error {
 		s.processPlay = nil
 	}()
 
-	s.processRec = exec.Command("arecord", "-t", "wav", "-f", s.Format, fmt.Sprintf("-r%d", s.Bitrate), fmt.Sprintf("-c%d", s.Channels), "-D", "hw:"+s.DeviceIn, "-B0", "--buffer-size=512")
+	s.processRec = exec.Command("arecord", "-t", "wav", "-f", s.Format, fmt.Sprintf("-r%d", s.Bitrate), fmt.Sprintf("-c%d", s.Channels), "-D", "hw:"+s.DeviceIn, "-F0", "--period-size=512", "-B0", "--buffer-size=512")
 	s.processRec.Stdout = pipeW
 	if err := s.processRec.Start(); err != nil {
 		s.processPlay.Process.Kill()
