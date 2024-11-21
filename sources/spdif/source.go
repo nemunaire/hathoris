@@ -3,16 +3,21 @@ package spdif
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
+	"time"
 
+	"git.nemunai.re/nemunaire/hathoris/alsacontrol"
 	"git.nemunai.re/nemunaire/hathoris/sources"
 )
 
 type SPDIFSource struct {
 	processRec  *exec.Cmd
 	processPlay *exec.Cmd
+	endChan     chan bool
 	DeviceIn    string
 	DeviceOut   string
 	Bitrate     int64
@@ -28,12 +33,16 @@ func init() {
 				idfile := path.Join(thisdir, "id")
 				if fd, err := os.Open(idfile); err == nil {
 					if cnt, err := io.ReadAll(fd); err == nil && string(cnt) == "imxspdif\n" {
-						sources.SoundSources["imxspdif"] = &SPDIFSource{
-							DeviceIn:  "imxspdif",
-							DeviceOut: "is31ap2121",
-							Bitrate:   48000,
-							Channels:  2,
-							Format:    "S24_LE",
+						sr, err := getCardSampleRate("imxspdif")
+						if err == nil {
+							sources.SoundSources["imxspdif"] = &SPDIFSource{
+								endChan:   make(chan bool, 1),
+								DeviceIn:  "imxspdif",
+								DeviceOut: "is31ap2121",
+								Bitrate:   sr,
+								Channels:  2,
+								Format:    "S24_LE",
+							}
 						}
 					}
 					fd.Close()
@@ -93,6 +102,8 @@ func (s *SPDIFSource) Enable() error {
 		return err
 	}
 
+	go s.watchBitrate()
+
 	go func() {
 		err := s.processRec.Wait()
 		if err != nil {
@@ -113,6 +124,57 @@ func (s *SPDIFSource) Disable() error {
 	if s.processPlay != nil && s.processPlay.Process != nil {
 		s.processPlay.Process.Kill()
 	}
+	s.endChan <- true
 
 	return nil
+}
+
+func getCardSampleRate(cardId string) (sr int64, err error) {
+	cc, err := alsa.ParseAmixerContent("hw:" + cardId)
+	if err != nil {
+		return 0, fmt.Errorf("unable to parse amixer content: %w", err)
+	}
+
+	for _, c := range cc {
+		if len(c.Values) == 1 {
+			val, err := strconv.Atoi(c.Values[0])
+			if c.Name == "RX Sample Rate" && err == nil && val > 0 {
+				return int64(val), nil
+			}
+		}
+	}
+
+	return 0, fmt.Errorf("unable to find 'RX Sample Rate' control value")
+}
+
+func (s *SPDIFSource) watchBitrate() {
+	ticker := time.NewTicker(time.Second)
+
+loop:
+	for {
+		select {
+		case <-ticker.C:
+			sr, err := getCardSampleRate(s.DeviceIn)
+			if err == nil && s.Bitrate/10 != sr/10 {
+				log.Printf("[SPDIF] Sample rate changes from %d to %d Hz", s.Bitrate, sr)
+				s.Bitrate = sr
+
+				s.Disable()
+
+				// Wait process exited
+				for {
+					if s.processPlay == nil && s.processRec == nil {
+						break
+					}
+					time.Sleep(100 * time.Millisecond)
+				}
+
+				s.Enable()
+			}
+		case <-s.endChan:
+			break loop
+		}
+	}
+
+	ticker.Stop()
 }
