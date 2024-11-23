@@ -53,6 +53,9 @@ func init() {
 }
 
 func (s *SPDIFSource) GetName() string {
+	if s.IsActive() {
+		return fmt.Sprintf("S/PDIF %.1f kHz", float32(s.Bitrate)/1000)
+	}
 	return "S/PDIF"
 }
 
