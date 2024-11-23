@@ -118,6 +118,7 @@ func (s *SPDIFSource) Enable() error {
 		}
 		pipeW.Close()
 
+		s.endChan <- true
 		s.processRec = nil
 	}()
 
@@ -131,7 +132,6 @@ func (s *SPDIFSource) Disable() error {
 	if s.processPlay != nil && s.processPlay.Process != nil {
 		s.processPlay.Process.Kill()
 	}
-	s.endChan <- true
 
 	return nil
 }
