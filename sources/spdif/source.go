@@ -72,6 +72,13 @@ func (s *SPDIFSource) Enable() error {
 		s.processPlay.Process.Kill()
 	}
 
+	// Update bitrate
+	sr, err := getCardSampleRate(s.DeviceIn)
+	if err != nil {
+		return err
+	}
+	s.Bitrate = sr
+
 	pipeR, pipeW, err := os.Pipe()
 	if err != nil {
 		return err
@@ -138,7 +145,7 @@ func getCardSampleRate(cardId string) (sr int64, err error) {
 	for _, c := range cc {
 		if len(c.Values) == 1 {
 			val, err := strconv.Atoi(c.Values[0])
-			if c.Name == "RX Sample Rate" && err == nil && val > 0 {
+			if c.Name == "RX Sample Rate" && err == nil {
 				return int64(val), nil
 			}
 		}
@@ -150,26 +157,48 @@ func getCardSampleRate(cardId string) (sr int64, err error) {
 func (s *SPDIFSource) watchBitrate() {
 	ticker := time.NewTicker(time.Second)
 
+	nbAt0 := 0
 loop:
 	for {
 		select {
 		case <-ticker.C:
 			sr, err := getCardSampleRate(s.DeviceIn)
-			if err == nil && s.Bitrate/10 != sr/10 {
-				log.Printf("[SPDIF] Sample rate changes from %d to %d Hz", s.Bitrate, sr)
-				s.Bitrate = sr
+			if err == nil {
+				if sr == 0 {
+					nbAt0 += 1
+					if nbAt0 >= 30 {
+						log.Printf("[SPDIF] Sample rate is at %d Hz for %d seconds, disabling", sr, nbAt0)
+						s.Disable()
 
-				s.Disable()
-
-				// Wait process exited
-				for {
-					if s.processPlay == nil && s.processRec == nil {
-						break
+						// Wait process exited
+						for {
+							if s.processPlay == nil && s.processRec == nil {
+								break
+							}
+							time.Sleep(100 * time.Millisecond)
+						}
+					} else if nbAt0 == 1 || nbAt0%5 == 0 {
+						log.Printf("[SPDIF] Sample rate is at %d Hz for %d seconds", sr, nbAt0)
 					}
-					time.Sleep(100 * time.Millisecond)
-				}
+				} else {
+					nbAt0 = 0
+					if s.Bitrate/10 != sr/10 {
+						log.Printf("[SPDIF] Sample rate changes from %d to %d Hz", s.Bitrate, sr)
+						s.Bitrate = sr
 
-				s.Enable()
+						s.Disable()
+
+						// Wait process exited
+						for {
+							if s.processPlay == nil && s.processRec == nil {
+								break
+							}
+							time.Sleep(100 * time.Millisecond)
+						}
+
+						s.Enable()
+					}
+				}
 			}
 		case <-s.endChan:
 			break loop
