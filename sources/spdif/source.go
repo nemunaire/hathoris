@@ -80,6 +80,10 @@ func (s *SPDIFSource) Enable() error {
 	if err != nil {
 		return err
 	}
+	// If no bitrate, asume soundcard is sleeping, try to wake up with a random bitrate
+	if sr == 0 {
+		sr = 44100
+	}
 	s.Bitrate = sr
 
 	// If no bitrate, asume soundcard is sleeping, try to wake up with a random bitrate
