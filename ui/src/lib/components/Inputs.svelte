@@ -25,7 +25,7 @@
         </li>
     {/if}
     {#each $inputsList as input, iid}
-        {#if showInactives || input.active}
+        {#if input.streams && (showInactives || input.active)}
             {#each Object.keys(input.streams) as idstream}
                 {@const title = input.streams[idstream]}
                 <li class="list-group-item py-3 d-flex flex-column">

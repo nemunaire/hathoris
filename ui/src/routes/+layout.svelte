@@ -48,7 +48,7 @@
                     <div class="d-inline-block me-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                {#if input.streams.length}
+                                {#if input.streams && input.streams.length}
                                     {#each Object.keys(input.streams) as idstream}
                                         {@const title = input.streams[idstream]}
                                         <strong>{title}</strong>
