@@ -4,12 +4,15 @@
  let activating_source = null;
  async function clickSource(src) {
      activating_source = src.id;
-     if (src.enabled) {
-         await src.deactivate();
-         await sources.refresh();
-     } else {
-         await src.activate();
-         await sources.refresh();
+     try {
+         if (src.enabled) {
+             await src.deactivate();
+             await sources.refresh();
+         } else {
+             await src.activate();
+             await sources.refresh();
+         }
+     } catch {
      }
      activating_source = null;
  }
