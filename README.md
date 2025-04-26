@@ -281,6 +281,17 @@ curl http://127.0.0.1:8080/api/mixer'
 ]
 ```
 
+#### With Kodi
+
+An companion script is available to control hathoris directly from Kodi:
+<https://git.nemunai.re/nemunaire/kodi.script.hathoris>
+
+You can also create a script to automaticaly enable your Kodi input when it lauches.
+Eg. for LibreELEC, append in `~/.config/autostart.sh`:
+
+```
+curl 'http://192.168.0.42:8080/api/sources/spdif/enable' -X POST
+```
 
 ## Compatible Hardware
 
