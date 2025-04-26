@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -182,6 +183,10 @@ func ParseAmixerContent(cardId string) ([]*CardControl, error) {
 	}
 
 	err = cmd.Wait()
+
+	// Sort mixers by NumID
+	sort.Sort(ByNumID(ret))
+
 	return ret, err
 }
 
@@ -202,3 +207,9 @@ func (cc *CardControl) CsetAmixer(cardId string, values ...string) error {
 
 	return cmd.Wait()
 }
+
+type ByNumID []*CardControl
+
+func (a ByNumID) Len() int           { return len(a) }
+func (a ByNumID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByNumID) Less(i, j int) bool { return a[i].NumID < a[j].NumID }
