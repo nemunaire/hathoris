@@ -47,13 +47,31 @@ Hathoris is compatible with any Linux distribution that has PulseAudio. It also 
 
 ### Quick Installation Guide
 
+#### With Docker
+
+[Prepare a configuration for optional virtual inputs](#audio-sources) (like radios, streaming sources), create the file at `~/.config/hathoris/settings.json`.
+
+```
+docker run -p 8080:8080 \
+  --device /dev/snd \
+  -e PULSE_SERVER=unix:/run/pulse/native \
+  -v ${XDG_RUNTIME_DIR}/pulse/native:/run/pulse/native \
+  -v ~/.config/pulse/cookie:/root/.config/pulse/cookie \
+  -v ~/.config/hathoris:/var/lib/hathoris \
+  nemunaire/hathoris:1
+```
+
+⚠️ Please note that if your host is directly reachable on the Internet, it will be accessible to anyone who can reach this port. It is recommended to use a reverse proxy and/or configure proper firewall rules to secure your setup.
+
+#### Without Docker
+
 1. Install dependancies.
 
-   On Debian/Ubuntu/Raspbian/armbian/...: `sudo apt install alsa-utils pulseaudio-utils mpv yt-dlp`
-   On Alpine: `sudo apk add alsa-utils pulseaudio-utils mpv yt-dlp`
-   On ArchLinux/Manjaro: `sudo pacman -S alsa-utils pulseaudio mpv yt-dlp`
+   - On Debian/Ubuntu/Raspbian/armbian/...: `sudo apt install alsa-utils pulseaudio-utils mpv yt-dlp`
+   - On Alpine: `sudo apk add alsa-utils pulseaudio-utils mpv yt-dlp`
+   - On ArchLinux/Manjaro: `sudo pacman -S alsa-utils pulseaudio mpv yt-dlp`
 
-2. Download the latest release binary for your architecture; choose between ARMv6 (Raspberry Pi Zero), ARMv7 (Voltastreams, Raspberry Pi 2+), ARM64 (Raspberry Pi Zero 2 and 3+ **with 64 bits OS**): https://git.nemunai.re/nemunaire/hathoris/releases/latest
+2. Download the [latest release binary for your architecture](https://github.com/nemunaire/hathoris/releases/latest); choose between ARMv6 (Raspberry Pi Zero), ARMv7 (Voltastreams, Raspberry Pi 2+), ARM64 (Raspberry Pi Zero 2 and 3+ **with 64 bits OS**).
 
 3. Give execution permissions: `chmod +x hathoris-linux-armv7`
 
@@ -61,11 +79,13 @@ Hathoris is compatible with any Linux distribution that has PulseAudio. It also 
 
    The file is called `settings.json`, it is expected to be in the directory where you execute `hathoris`. It can be overwrited by adding a command line argument like `-settings-file /etc/hathoris/settings.json`.
 
-5. Launch the binary: `./hathoris -bind :8081`
+5. Launch the binary: `./hathoris -bind :8080`
 
-6. The interface will be available on the port 8081 from anywhere on your local network.
+6. The interface will be available on the port 8080 from anywhere on your local network.
 
-   From your local machine, it'll be on <http://localhost:8081/>
+   From your local machine, it'll be on <http://localhost:8080/>
+
+⚠️ Please note that if your host is directly reachable on the Internet, it will be accessible to anyone who can reach this port. It is recommended to use a reverse proxy and/or configure proper firewall rules to secure your setup.
 
 Enjoy!
 

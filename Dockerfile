@@ -20,7 +20,11 @@ RUN go get && go generate && go build -ldflags="-s -w"
 
 FROM alpine:3.18
 
+ENV HATHORIS_BIND=:8080
 EXPOSE 8080
-CMD ["/srv/hathoris"]
+ENTRYPOINT ["/srv/hathoris"]
+WORKDIR /var/lib/hathoris
+
+RUN mkdir /var/lib/hathoris; apk --no-cache add alsa-utils pulseaudio-utils mpv yt-dlp
 
 COPY --from=build /go/src/git.nemunai.re/nemunaire/hathoris/hathoris /srv/hathoris
