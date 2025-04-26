@@ -52,7 +52,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <i class="bi bi-speaker"></i>
-                            Sources
+                            Inputs
                         </div>
                         <button
                             class="btn btn-sm"

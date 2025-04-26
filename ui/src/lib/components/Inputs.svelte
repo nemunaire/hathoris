@@ -20,7 +20,7 @@
     {#if (showInactives && $inputsList.length === 0) || (!showInactives && $activeInputs.length === 0)}
         <li class="list-group-item py-3">
             <span class="text-muted">
-                Aucune source active.
+                No active source.
             </span>
         </li>
     {/if}

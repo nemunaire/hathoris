@@ -27,7 +27,7 @@
 
         {#if $activeSources.length === 0 && $activeInputs.length === 0}
             <div class="text-muted text-center mt-1 mb-1">
-                Aucune source active pour l'instant.
+                No active audio source currently.
             </div>
         {:else}
             <marquee>
@@ -38,7 +38,7 @@
                                 {#if source.currentTitle}
                                     <strong>{source.currentTitle}</strong> <span class="text-muted">@ {source.name}</span>
                                 {:else}
-                                    {source.name} activée
+                                    {source.name} enabled
                                 {/if}
                             </div>
                         </div>
@@ -55,7 +55,7 @@
                                     {/each}
                                     <span class="text-muted">@ {input.name}</span>
                 {:else}
-                                    {input.name} activée
+                                    {input.name} enabled
                                 {/if}
                             </div>
                         </div>
