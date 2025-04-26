@@ -92,6 +92,120 @@ trigger:
 
 ---
 kind: pipeline
+type: docker
+name: build-amd64
+
+platform:
+  os: linux
+  arch: amd64
+
+workspace:
+  base: /go
+  path: src/git.nemunai.re/nemunaire/hathoris
+
+steps:
+- name: build front
+  image: node:21
+  commands:
+    - mkdir deploy
+    - cd ui
+    - npm install --network-timeout=100000
+    - npm run build
+
+- name: build
+  image: golang:1-alpine
+  commands:
+    - apk --no-cache add alsa-lib-dev build-base git pkgconf
+    - go get -v -d
+    - go vet -v
+    - go build -v -ldflags '-w -X main.Version=${DRONE_BRANCH}-${DRONE_COMMIT} -X main.build=${DRONE_BUILD_NUMBER}' -o deploy/hathoris-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}
+    - ln deploy/hathoris-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH} hathoris
+
+- name: gitea release
+  image: plugins/gitea-release
+  settings:
+    api_key:
+      from_secret: gitea_api_key
+    base_url: https://git.nemunai.re/
+    files:
+      - deploy/hathoris-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}
+
+- name: docker
+  image: plugins/docker
+  settings:
+    registry: registry.nemunai.re
+    repo: registry.nemunai.re/hathoris
+    auto_tag: true
+    auto_tag_suffix: ${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}
+    dockerfile: Dockerfile-norebuild
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+
+trigger:
+  event:
+  - tag
+
+---
+kind: pipeline
+type: docker
+name: build-arm64
+
+platform:
+  os: linux
+  arch: arm64
+
+workspace:
+  base: /go
+  path: src/git.nemunai.re/nemunaire/hathoris
+
+steps:
+- name: build front
+  image: node:21
+  commands:
+    - mkdir deploy
+    - cd ui
+    - npm install --network-timeout=100000
+    - npm run build
+
+- name: build
+  image: golang:1-alpine
+  commands:
+    - apk --no-cache add alsa-lib-dev build-base git pkgconf
+    - go get -v -d
+    - go vet -v
+    - go build -v -ldflags '-w -X main.Version=${DRONE_BRANCH}-${DRONE_COMMIT} -X main.build=${DRONE_BUILD_NUMBER}' -o deploy/hathoris-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}
+    - ln deploy/hathoris-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH} hathoris
+
+- name: gitea release
+  image: plugins/gitea-release
+  settings:
+    api_key:
+      from_secret: gitea_api_key
+    base_url: https://git.nemunai.re/
+    files:
+      - deploy/hathoris-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}
+
+- name: docker
+  image: plugins/docker
+  settings:
+    registry: registry.nemunai.re
+    repo: registry.nemunai.re/hathoris
+    auto_tag: true
+    auto_tag_suffix: ${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}
+    dockerfile: Dockerfile-norebuild
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+
+trigger:
+  event:
+  - tag
+
+---
+kind: pipeline
 name: docker-manifest
 
 steps:
@@ -113,4 +227,6 @@ trigger:
   - tag
 
 depends_on:
+- build-amd64
+- build-arm64
 - build-arm
