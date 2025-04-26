@@ -74,8 +74,7 @@ steps:
 - name: docker
   image: plugins/docker:linux-arm
   settings:
-    registry: registry.nemunai.re
-    repo: registry.nemunai.re/hathoris
+    repo: nemunaire/hathoris
     auto_tag: true
     auto_tag_suffix: ${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}
     dockerfile: Dockerfile-norebuild
@@ -133,8 +132,7 @@ steps:
 - name: docker
   image: plugins/docker
   settings:
-    registry: registry.nemunai.re
-    repo: registry.nemunai.re/hathoris
+    repo: nemunaire/hathoris
     auto_tag: true
     auto_tag_suffix: ${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}
     dockerfile: Dockerfile-norebuild
@@ -190,8 +188,7 @@ steps:
 - name: docker
   image: plugins/docker
   settings:
-    registry: registry.nemunai.re
-    repo: registry.nemunai.re/hathoris
+    repo: nemunaire/hathoris
     auto_tag: true
     auto_tag_suffix: ${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}
     dockerfile: Dockerfile-norebuild
